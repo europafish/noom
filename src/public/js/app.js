@@ -1,56 +1,44 @@
 const socket = io();
 
-const welcome = document.querySelector("#welcome");
-const form = welcome.querySelector("form");
-const room = document.getElementById("room");
+const myFace = document.getElementById("myFace");
+const muteBtn = document.getElementById("mute");
+const cameraBtn = document.getElementById("camera");
+let myStream;
+let muted = false;
+let cameraOff = false;
 
-let roomName;
-
-room.hidden = true;
-
-function addMessage(message) {
-  const ul = room.querySelector("ul");
-  const li = document.createElement("li");
-  li.innerHTML = message;
-  ul.appendChild(li);
-}
-function showRoom() {
-  welcome.hidden = true;
-  room.hidden = false;
-  const h3 = room.querySelector("h3");
-  h3.innerText = `Room ${roomName}`;
-  const form = room.querySelector("form");
-  form.addEventListener("submit", handleMessageSubmit);
-}
-function handleRoomSubmit(event) {
-  event.preventDefault();
-  const input = form.querySelector("input");
-  // socket.emit("enter_room", {
-  //   payload: input.value,
-  // });
-  socket.emit("enter_room", input.value, showRoom);
-  roomName = input.value;
-  input.value = "";
+async function getMedia() {
+  try {
+    myStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
+    myFace.srcObject = myStream;
+  } catch (e) {
+    console.log(e);
+  }
 }
 
-function handleMessageSubmit(event) {
-  event.preventDefault();
-  const input = room.querySelector("input");
-  const value = input.value;
-  socket.emit("new_message", value, roomName, () => {
-    addMessage(`You: ${value}`);
-  });
-  input.value = "";
+function handleMuteClick() {
+  if (!muted) {
+    muteBtn.innerHTML = "Unmute";
+    muted = true;
+  } else {
+    muteBtn.innerHTML = "Mute";
+    muted = false;
+  }
 }
 
-form.addEventListener("submit", handleRoomSubmit);
-socket.on("welcome", () => {
-  addMessage("someone joined!");
-});
-socket.on("bye", () => {
-  addMessage("someone left.");
-});
+function handleCameraClick(){
+  if(!cameraOff){
+    cameraBtn.innerHTML = "Turn Camera On";
+    cameraOff = true;
+  }else{
+    cameraBtn.innerHTML = "Turn Camera Off";
+    cameraOff = false;
+  }
 
-socket.on("new_message", (msg) => {
-  addMessage(msg);
-});
+
+
+muteBtn.addEventListener("click", handleMuteClick);
+cameraBtn.addEventListener("click", handleCameraClick);
